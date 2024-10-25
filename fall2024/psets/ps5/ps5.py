@@ -165,12 +165,35 @@ def bfs_2_coloring(G, precolored_nodes=None):
         if len(precolored_nodes) == G.N:
             return G.colors
     
-    # TODO: Complete this function by implementing two-coloring using the colors 0 and 1.
-    # If there is no valid coloring, reset all the colors to None using G.reset_colors()
-    
-    G.reset_colors()
-    return None
+    # Initialize two colors: 0 and 1
+    colors = [0, 1]
+    # Use a queue for BFS traversal
+    queue = []
 
+    # Traverse each connected component
+    for start_node in range(G.N):
+        if start_node not in visited:
+            # Start BFS from this node
+            G.colors[start_node] = colors[0]
+            queue.append(start_node)
+            visited.add(start_node)
+
+            while queue:
+                current = queue.pop(0)
+                current_color = G.colors[current]
+                next_color = colors[1] if current_color == colors[0] else colors[0]
+
+                for neighbor in G.edges[current]:
+                    if neighbor not in visited:
+                        G.colors[neighbor] = next_color
+                        visited.add(neighbor)
+                        queue.append(neighbor)
+                    elif G.colors[neighbor] == current_color:
+                        # If a neighbor has the same color, the graph is not 2-colorable
+                        G.reset_colors()
+                        return None
+
+    return G.colors
 
 
 '''
@@ -185,8 +208,18 @@ def bfs_2_coloring(G, precolored_nodes=None):
 # Given an instance of the Graph class G (which has a subset of precolored nodes), searches for a 3 coloring
 # If successful, modifies G.colors and returns the coloring.
 # If no coloring is possible, resets all of G's colors to None and returns None.
+
 def iset_bfs_3_coloring(G):
-    # TODO: Complete this function.
+    # Iterate over all maximal independent sets using the Bron-Kerbosch algorithm
+    for iset in get_maximal_isets(G):
+        # Attempt to color the independent set with color 2
+        for node in iset:
+            G.colors[node] = 2
+
+        # Use BFS to attempt to 2-color the rest of the graph
+        coloring = bfs_2_coloring(G, precolored_nodes=iset)
+        if coloring is not None:
+            return coloring
 
     G.reset_colors()
     return None
